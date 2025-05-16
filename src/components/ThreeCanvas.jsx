@@ -15,15 +15,18 @@ function ThreeCanvas() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedBlueprint, setSelectedBlueprint] = useState(null);
+  const [dropPosition, setDropPosition] = useState(null);
 
-  const handleOpenDialog = (blueprint) => {
+  const handleOpenDialog = (blueprint, position) => {
     setSelectedBlueprint(blueprint);
+    setDropPosition(position);
     setDialogOpen(true);
   };
 
   const handleDialogClose = () => {
     setDialogOpen(false);
     setSelectedBlueprint(null);
+    setDropPosition(null);
   };
 
   return (
@@ -33,18 +36,15 @@ function ThreeCanvas() {
         camera={{ position: [0, 10, 10], fov: 75, near: 0.1, far: 1000 }}
         shadows
       >
-        {/* Ambient light for a baseline illumination */}
         <ambientLight intensity={0.2} />
-        {/* Hemisphere light for soft, directional ambient lighting */}
         <hemisphereLight
-          skyColor={0xffffff} // Bright white light from above (sky)
-          groundColor={0x444444} // Darker gray light from below (ground)
-          intensity={0.6} // Adjust intensity to balance with directional light
+          skyColor={0xffffff}
+          groundColor={0x444444}
+          intensity={0.6}
         />
-        {/* Directional light for primary lighting and shadows */}
         <directionalLight
           position={[5, 10, 5]}
-          intensity={0.8} // Reduced intensity to balance with hemisphere light
+          intensity={0.8}
           castShadow
           shadow-mapSize-width={1024}
           shadow-mapSize-height={1024}
@@ -57,7 +57,7 @@ function ThreeCanvas() {
         />
         <SceneContent blueprints={blueprints} onDrop={handleOpenDialog} />
       </Canvas>
-      {dialogOpen &&
+      {dialogOpen && (
         <PartSelectionDialog
           open={dialogOpen}
           onClose={handleDialogClose}
@@ -67,7 +67,7 @@ function ThreeCanvas() {
               const tile = {
                 id: uuidv4(),
                 blueprintId: selectedBlueprint.id,
-                position: { x: 2, y: 2, z: 0 },
+                position: dropPosition || { x: 2, y: 2, z: 0 }, // Use drop position, fallback to default
                 rotation: 0,
                 stlUrls,
               };
@@ -77,7 +77,7 @@ function ThreeCanvas() {
             handleDialogClose();
           }}
         />
-      }
+      )}
     </>
   );
 }

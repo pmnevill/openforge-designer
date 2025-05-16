@@ -72,21 +72,29 @@ function Tile({ tile, blueprint }) {
 
     // Default rotation to align STL Z-up to scene Y-up
     let rotation = [0, 0, 0];
-    let position = [tile.position.x, 0, tile.position.z]; // Start at tile origin, Y=0
+    let position = [0, 0, 0]; // Relative to the tile's root position
 
     if (partName.includes('base')) {
-      position = [tile.position.x, baseHeight / 2, tile.position.z];
+      // Position the base so its bottom is at y=0 relative to the tile's root
+      // After rotation [-Math.PI / 2, 0, 0], the STL's Z-axis (height) becomes the scene's Y-axis
+      // Centered geometry extends from -height/2 to +height/2 along Z, so after rotation, along Y
+      // To align the bottom (y=-height/2) at y=0, the center needs to be at y=height/2
+      position = [0, baseHeight / 2, 0];
     } else if (partName.includes('right wall')) {
-      position = [tile.position.x + baseWidth / 2, baseHeight + height / 2, tile.position.z];
+      position = [baseWidth / 2, baseHeight + height / 2, 0];
     } else if (partName.includes('left wall')) {
-      position = [tile.position.x, baseHeight + height / 2, tile.position.z + baseDepth / 2];
+      position = [0, baseHeight + height / 2, baseDepth / 2];
       rotation = [0, 0, Math.PI / 2]; // Rotate around Z to align along scene Z
     } else if (partName.includes('column')) {
-      position = [tile.position.x + baseWidth / 2, baseHeight + height / 2, tile.position.z + baseDepth / 2];
+      position = [baseWidth / 2, baseHeight + height / 2, baseDepth / 2];
       rotation = [-Math.PI / 2, 0, Math.PI / 2];
     } else if (partName.includes('floor')) {
-      position = [tile.position.x, baseHeight + height / 2, tile.position.z];
+      position = [0, baseHeight + height / 2, 0];
     }
+
+    // Add the tile's x, z position to the part's position
+    position[0] += tile.position.x;
+    position[2] += tile.position.z;
 
     console.log(`Part ${index} (${partName}):`, { position, rotation, width, depth, height });
     return { rotation, position, scale: [scaleFactor, scaleFactor, scaleFactor] };
@@ -99,7 +107,7 @@ function Tile({ tile, blueprint }) {
       rotation={[0, tile.rotation, 0]}
       userData={{ tileId: tile.id }}
     >
-      <group scale={[scaleFactor, scaleFactor, scaleFactor]} rotation={[-Math.PI / 2, 0, 0]} position={[0.25, -1, 0]}>
+      <group scale={[scaleFactor, scaleFactor, scaleFactor]} rotation={[-Math.PI / 2, 0, 0]}>
         {geometries.map((geometry, index) => {
           const { rotation, position, scale } = getPartTransformation(tile.stlUrls[index], index);
           return (
